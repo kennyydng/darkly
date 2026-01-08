@@ -4,7 +4,7 @@
 
 La page utilise un paramètre `src` pour afficher des médias :
 ```
-http://localhost:8080/?page=media&src=photo.jpg
+http://localhost:8080/?page=media&src=photo
 ```
 
 Le site affiche le contenu de `src` sans validation → vulnérabilité d'injection.
@@ -19,11 +19,32 @@ Le **XSS** permet à un attaquant d'injecter du code JavaScript malveillant qui 
 3. Le navigateur de la victime exécute le code, pensant qu'il vient du site légitime
 4. Le code malveillant a accès aux cookies, sessions, et peut manipuler la page
 
-### Risques
-- **Vol de données** : Cookies de session, tokens CSRF → usurpation d'identité
-- **Phishing intégré** : Fausse page de login affichée SUR le site légitime (l'URL reste légitime)
-- **Manipulation** : Modification du contenu, redirection invisible, keylogging
-- **Confiance aveugle** : La victime fait confiance à l'URL du site → impossible à détecter visuellement
+### Cas concrets d'exploitation
+
+#### 1. Vol de Session (Session Hijacking)
+C'est le cas le plus classique et le plus critique.
+*   **Scénario :** Un attaquant envoie un lien piégé à un administrateur du site.
+    *   Lien : `http://vulnerable-site.com/?page=media&src=data:text/html;base64,...`
+*   **Action :** Le script injecté s'exécute invisiblement et récupère le cookie de session (`document.cookie`).
+*   **Conséquence :** Il envoie ce cookie à un serveur contrôlé par l'attaquant, permettant une connexion sans mot de passe.
+
+#### 2. Phishing sophistiqué ("Sur Site")
+Contrairement à un site de phishing classique, l'attaque se déroule sur le **vrai domaine**.
+*   **Scénario :** L'attaquant injecte un formulaire HTML imitant la mire de connexion.
+*   **Action :** L'utilisateur voit l'URL légitime dans sa barre d'adresse et entre ses identifiants en confiance.
+*   **Conséquence :** Le formulaire envoie le mot de passe directement à l'attaquant.
+
+#### 3. Keylogger (Enregistreur de frappe)
+*   **Scénario :** Un script injecté écoute tous les événements de frappe clavier (`keydown`).
+*   **Conséquence :** Tout ce que la victime tape (messages, numéros de carte, mots de passe) est envoyé en temps réel à l'attaquant.
+
+#### 4. Actions non désirées (CSRF via XSS)
+*   **Scénario :** Le script injecté effectue des requêtes API au nom de la victime connectée (ex: changement de mot de passe, suppression de compte).
+*   **Conséquence :** Le serveur accepte ces actions car elles proviennent du navigateur légitime de la victime.
+
+#### 5. Accès Intranet / Contournement
+*   **Scénario :** Le code s'exécute depuis le navigateur de la victime, potentiellement situé dans un réseau d'entreprise protégé.
+*   **Conséquence :** L'attaquant peut scanner le réseau interne ou accéder à des ressources inaccessibles depuis l'extérieur.
 
 ## 3. Exploitation
 
@@ -48,8 +69,7 @@ data:text/html;base64,PHNjcmlwdD5hbGVydCgiWFNTIik8L3NjcmlwdD4K
 ```
 Le base64 transforme n'importe quel contenu en caractères "sûrs" (A-Z, a-z, 0-9, +, /, =).
 
-### Étapes d'exploitation
-
+### Exploitation de la faille
 **1. Créer le payload malveillant**
 
 ```bash
@@ -67,8 +87,6 @@ echo '<script>alert("XSS")</script>' | base64
 http://localhost:8080/?page=media&src=data:text/html;base64,PHNjcmlwdD5hbGVydCgiWFNTIik8L3NjcmlwdD4K
 ```
 
-**3. Pourquoi ça fonctionne ?**
-
 Le site fait simplement :
 ```php
 $src = $_GET['src'];  // Récupère n'importe quoi
@@ -82,20 +100,7 @@ Ce qui produit dans le HTML :
 
 Le navigateur voit cet attribut `src` avec un Data URI et l'exécute comme du HTML !
 
-### Obtenir le flag
-
-```bash
-# Tester le payload
-curl "http://localhost:8080/?page=media&src=data:text/html;base64,PHNjcmlwdD5hbGVydCgiWFNTIik8L3NjcmlwdD4K"
-
-# Ou sans base64 (plus simple à lire)
-curl "http://localhost:8080/?page=media&src=data:text/html,<script>alert('XSS')</script>"
-
-# Pour voir tout le contenu de la page et trouver le flag
-http://localhost:8080/?page=media&src=data:text/html,<script>alert(document.body.innerHTML)</script>
-```
-
-## 4. Solution
+## 3. Solution
 
 ### Validation stricte
 
