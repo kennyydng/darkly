@@ -20,11 +20,14 @@ Le formulaire contient un champ caché avec une adresse email :
 1. Ouvrir les DevTools du navigateur (F12)
 2. Aller dans l'onglet "Inspecteur" ou "Elements"
 3. Trouver le champ caché `<input type="hidden" name="mail" value="webmaster@borntosec.com">`
-4. Double-cliquer sur la valeur et la modifier (essayer `admin@borntosec.com`, `root@borntosec.com`, etc.)
-5. Soumettre le formulaire
-6. Le serveur révèle le flag avec la bonne adresse email
+4. Double-cliquer sur la valeur et la modifier en une autre adresse email
+   - Par exemple : `admin@borntosec.com`, `root@borntosec.com`, etc.
+5. Soumettre le formulaire modifié
+6. **Le serveur retourne directement le flag !**
 
-**Alternative** : Changer `type="hidden"` en `type="text"` pour rendre le champ directement modifiable dans la page.
+Le serveur accepte l'email modifié et révèle le flag car il fait confiance aux données envoyées par le client sans validation côté serveur.
+
+**Alternative** : Changer `type="hidden"` en `type="text"` pour rendre le champ directement modifiable dans la page, puis modifier l'email et soumettre.
 
 ## Bonne pratique
 

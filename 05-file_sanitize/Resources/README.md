@@ -109,7 +109,7 @@ if(isset($_GET['cmd'])) {
 ?>
 ```
 
-**Usage:** `http://site.com/uploads/shell.php?cmd=ls -la`
+**Usage:** `http://localhost:8080/uploads/shell.php?cmd=ls -la`
 
 **Impact:** Exécution de n'importe quelle commande système : 
 - `ls -la` : Lister les fichiers
@@ -129,64 +129,30 @@ if(isset($_GET['cmd'])) {
 
 ## Protection et prévention
 
-### Validations côté serveur
+### Protections essentielles
 
-1. **Vérification du type MIME réel**
-   ```php
-   $finfo = finfo_open(FILEINFO_MIME_TYPE);
-   $mimeType = finfo_file($finfo, $_FILES['uploaded']['tmp_name']);
-   ```
-
-2. **Vérification des magic bytes**
-   ```php
-   // Pour JPEG : FF D8 FF
-   $handle = fopen($_FILES['uploaded']['tmp_name'], 'rb');
-   $header = fread($handle, 3);
-   if ($header !== "\xFF\xD8\xFF") {
-       die("Not a valid JPEG");
-   }
-   ```
-
-3. **Liste blanche stricte d'extensions**
-   ```php
-   $allowedExtensions = ['jpg', 'jpeg'];
-   $ext = strtolower(pathinfo($_FILES['uploaded']['name'], PATHINFO_EXTENSION));
-   if (!in_array($ext, $allowedExtensions)) {
-       die("Invalid file extension");
-   }
-   ```
-
-4. **Renommer les fichiers uploadés**
-   ```php
-   $newFilename = hash('sha256', uniqid()) . '.jpg';
-   ```
-
-5. **Stocker hors du webroot**
-   - Ne pas placer les fichiers uploadés dans un répertoire accessible via HTTP
-   - Utiliser un script dédié pour servir les fichiers après validation
-
-6. **Désactiver l'exécution de scripts**
-   ```apache
-   # .htaccess dans le dossier d'upload
-   php_flag engine off
-   AddType text/plain .php .php3 .phtml
-   ```
-
-7. **Limite de taille stricte côté serveur**
-   ```php
-   if ($_FILES['uploaded']['size'] > 100000) {
-       die("File too large");
-   }
-   ```
-
-### Configuration du serveur
-
-```apache
-# Apache: Désactiver l'exécution dans le dossier uploads
-<Directory "/var/www/uploads">
-    php_flag engine off
-    Options -ExecCGI
-    AddHandler cgi-script .php .pl .py .jsp .asp .sh .cgi
-</Directory>
+**1. Vérifier le contenu réel du fichier (magic bytes)**
+```php
+// Pour JPEG : FF D8 FF
+$handle = fopen($_FILES['uploaded']['tmp_name'], 'rb');
+$header = fread($handle, 3);
+if ($header !== "\xFF\xD8\xFF") {
+    die("Not a valid JPEG");
+}
 ```
+Ne jamais faire confiance au Content-Type envoyé par le client.
+
+**2. Renommer les fichiers uploadés**
+```php
+$newFilename = hash('sha256', uniqid()) . '.jpg';
+```
+Empêche l'exécution de scripts même si uploadés.
+
+**3. Désactiver l'exécution de scripts dans le dossier d'upload**
+```apache
+# .htaccess dans le dossier d'upload
+php_flag engine off
+AddType text/plain .php .php3 .phtml
+```
+Dernier rempart : même si un script malveillant est uploadé, il ne sera pas exécuté.
 

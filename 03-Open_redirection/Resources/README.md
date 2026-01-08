@@ -99,9 +99,3 @@ Supprimer la redirection intermédiaire et pointer directement vers les réseaux
 2. **Validation côté serveur** : Ne jamais faire confiance aux entrées utilisateur
 3. **Logs sans exposition** : Enregistrer les erreurs sans les afficher
 4. **Tests de sécurité** : Tester avec des valeurs invalides/malicieuses
-
-## Références
-
-- [OWASP - Unvalidated Redirects](https://owasp.org/www-project-web-security-testing-guide/latest/4-Web_Application_Security_Testing/11-Client-side_Testing/04-Testing_for_Client-side_URL_Redirect)
-- [CWE-601: URL Redirection to Untrusted Site](https://cwe.mitre.org/data/definitions/601.html)
-- [CWE-209: Information Exposure Through an Error Message](https://cwe.mitre.org/data/definitions/209.html)
