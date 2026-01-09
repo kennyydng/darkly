@@ -4,28 +4,21 @@
 
 Le fichier `robots.txt` révèle l'existence de répertoires sensibles qui ne devraient pas être publics. Le répertoire `/whatever` est accessible et contient un fichier `.htpasswd` téléchargeable contenant des identifiants hashés en MD5.
 
-## Pourquoi chercher robots.txt ?
+### Vulnérabilités identifiées
 
-### Qu'est-ce que robots.txt ?
+1. **Information Disclosure** : `robots.txt` révèle des chemins sensibles
+2. **Directory Listing** : Le serveur liste le contenu du répertoire
+3. **Sensitive Data Exposure** : Le fichier `.htpasswd` est accessible publiquement
+4. **Weak Cryptographic Hash** : Utilisation de MD5 (obsolète et sans salt)
+5. **Weak Password** : Mot de passe facilement craquable
 
-Le fichier `robots.txt` est un fichier standard placé à la racine d'un site web qui indique aux moteurs de recherche (Google, Bing, etc.) quelles pages ils peuvent ou ne peuvent pas explorer et indexer.
+## Reconnaissance : robots.txt
 
-### Pourquoi c'est une cible en cybersécurité ?
+Le fichier `robots.txt` est **toujours la première chose à vérifier** lors d'un audit de sécurité web. C'est un fichier public par définition (accessible à `http://site.com/robots.txt`) qui indique aux moteurs de recherche quels répertoires ne pas indexer.
 
-1. **Toujours accessible** : Le fichier `robots.txt` est public par définition (accessible à `http://site.com/robots.txt`)
-2. **Révèle la structure** : Les administrateurs y listent souvent des répertoires qu'ils veulent cacher des moteurs de recherche
-3. **Fausse sécurité** : Beaucoup pensent que lister un répertoire dans `robots.txt` le "protège", mais ce fichier ne fait qu'indiquer aux robots de ne pas y aller - il ne bloque rien techniquement
-4. **Carte au trésor** : Pour un attaquant, c'est une liste de chemins potentiellement intéressants à explorer
+**Problème** : Les administrateurs y listent souvent des chemins sensibles en pensant que ça les "protège". Mais `robots.txt` ne bloque rien techniquement - c'est juste une recommandation aux robots. Un humain peut accéder directement à ces chemins.
 
-### Exemple typique
-```
-User-agent: *
-Disallow: /admin
-Disallow: /backup
-Disallow: /config
-```
-
-Cela signifie : "Chers robots, merci de ne pas indexer ces répertoires". Mais un humain peut y accéder directement !
+**Pour un attaquant** : `robots.txt` = liste de répertoires potentiellement intéressants à explorer.
 
 ## Exploitation
 
@@ -87,14 +80,6 @@ Authentification HTTP Basic :
 
 Résultat : Accès admin obtenu + flag
 
-## Vulnérabilités identifiées
-
-1. **Information Disclosure** : `robots.txt` révèle des chemins sensibles
-2. **Directory Listing** : Le serveur liste le contenu du répertoire
-3. **Sensitive Data Exposure** : Le fichier `.htpasswd` est accessible publiquement
-4. **Weak Cryptographic Hash** : Utilisation de MD5 (obsolète et sans salt)
-5. **Weak Password** : Mot de passe facilement craquable
-
 ## Solution de correction
 
 ### 1. Ne jamais lister de chemins sensibles dans robots.txt
@@ -131,9 +116,3 @@ htpasswd -B -c /var/www/secure/.htpasswd root
 ```
 
 Cela génère automatiquement un hash sécurisé au lieu de MD5.
-
-## Références
-
-- OWASP: Information Disclosure
-- OWASP: Sensitive Data Exposure
-- CWE-215: Information Exposure Through Debug Information
